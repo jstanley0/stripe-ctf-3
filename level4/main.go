@@ -11,6 +11,7 @@ import (
 	"stripe-ctf.com/sqlcluster/server"
 	"syscall"
 	"time"
+	"github.com/goraft/raft"
 )
 
 func main() {
@@ -104,6 +105,9 @@ OPTIONS:
 			}
 		}
 	}()
+
+  // Setup commands.
+  raft.RegisterCommand(&server.SqlCommand{})
 
 	// Start the server
 	go func() {

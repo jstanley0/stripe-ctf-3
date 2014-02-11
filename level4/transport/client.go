@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -31,7 +30,7 @@ func NewClient() *Client {
 	}
 }
 
-func (s *Client) SafePost(connectionString, path string, reqB io.Reader) (io.Reader, error) {
+func (s *Client) SafePost(connectionString, path string, reqB io.Reader) ([]byte, error) {
 	url := connectionString + path
 	resp, err := s.client.Post(url, "application/octet-stream", reqB)
 	if err != nil {
@@ -40,7 +39,7 @@ func (s *Client) SafePost(connectionString, path string, reqB io.Reader) (io.Rea
 	return handleResp(resp)
 }
 
-func (s *Client) SafeGet(connectionString, path string) (io.Reader, error) {
+func (s *Client) SafeGet(connectionString, path string) ([]byte, error) {
 	url := connectionString + path
 	resp, err := s.client.Get(url)
 	if err != nil {
@@ -49,7 +48,7 @@ func (s *Client) SafeGet(connectionString, path string) (io.Reader, error) {
 	return handleResp(resp)
 }
 
-func handleResp(resp *http.Response) (io.Reader, error) {
+func handleResp(resp *http.Response) ([]byte, error) {
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -63,5 +62,5 @@ func handleResp(resp *http.Response) (io.Reader, error) {
 		}
 	}
 
-	return bytes.NewBuffer(body), nil
+	return body, nil
 }

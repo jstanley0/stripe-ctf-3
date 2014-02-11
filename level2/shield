@@ -26,15 +26,34 @@ function rejectRequest(reqData) {
 var Queue = function (proxies, parameters) {
   this.proxies = proxies;
   this.parameters = parameters;
+  this.history = [];
 };
 Queue.prototype.takeRequest = function (reqData) {
-  // Reject traffic as necessary:
-  // if (currently_blacklisted(ipFromRequest(reqData))) {
-  //   rejectRequest(reqData);
-  //   return;
-  // }
-  // Otherwise proxy it through:
-  this.proxies[0].proxyRequest(reqData.request, reqData.response, reqData.buffer);
+  var address = ipFromRequest(reqData);
+
+  this.history.push(address);
+  if (this.history.length > 150)
+    this.history.shift();
+
+  var count = 0;
+  for(var i = 0; i < this.history.length; ++i)
+  {
+    if (this.history[i] == address)
+      ++count;
+  }
+
+  // the significance of this is:
+  // no degradation with fewer than 5 connections
+  // 50% chance of dropping connection after 5 more
+  var prob = Math.pow(2, -(count - 5) / 5);
+
+  if (Math.random() < prob) {
+//    console.log('accepting ', address);
+    this.proxies[0].proxyRequest(reqData.request, reqData.response, reqData.buffer);
+  } else {
+//    console.log('rejecting ', address);
+    rejectRequest(reqData);
+  }
 };
 Queue.prototype.requestFinished = function () {
   return;
